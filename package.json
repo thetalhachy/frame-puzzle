@@ -1,0 +1,10 @@
+{
+  "name": "puzzle-cam",
+  "version": "1.0.0",
+  "description": "Hand gesture-controlled puzzle game using webcam and MediaPipe",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npx serve ."
+  }
+}
