@@ -72,6 +72,10 @@ const galleryCount = document.getElementById("galleryCount");
 const downloadStripBtn = document.getElementById("downloadStripBtn");
 const resetAllBtn = document.getElementById("resetAllBtn");
 const stripCompleteMsg = document.getElementById("stripCompleteMsg");
+const recTimer = document.getElementById("recTimer");
+const flashOverlay = document.getElementById("flashOverlay");
+const loaderBarFill = document.getElementById("loaderBarFill");
+const loaderSteps = document.getElementById("loaderSteps");
 
 let appState = "tracking";
 
@@ -99,8 +103,10 @@ const galleryEntries = [];
 function addToGallery(snapshotCanvas) {
   if (galleryEntries.length >= STRIP_MAX_PHOTOS) return;
 
-  galleryEntries.push({ canvas: snapshotCanvas, time: Date.now() });
-  renderGalleryThumb(snapshotCanvas, galleryEntries.length);
+  const now = new Date();
+  const ts = now.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" });
+  galleryEntries.push({ canvas: snapshotCanvas, time: Date.now(), ts });
+  renderGalleryThumb(snapshotCanvas, galleryEntries.length, ts);
   galleryCount.textContent = `${galleryEntries.length} / ${STRIP_MAX_PHOTOS}`;
   if (galleryEmpty) galleryEmpty.style.display = "none";
 
@@ -188,25 +194,40 @@ function resetEverything() {
   statusText.textContent = "all reset";
 }
 
-function renderGalleryThumb(snapshotCanvas, index) {
+function renderGalleryThumb(snapshotCanvas, index, ts) {
   const print = document.createElement("div");
   print.className = "print";
 
-  const thumbCanvas = document.createElement("canvas");
+  const img = document.createElement("img");
   const THUMB_W = 220;
   const scale = THUMB_W / snapshotCanvas.width;
-  thumbCanvas.width = THUMB_W;
-  thumbCanvas.height = Math.round(snapshotCanvas.height * scale);
-  thumbCanvas
-    .getContext("2d")
-    .drawImage(snapshotCanvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+  const c = document.createElement("canvas");
+  c.width = THUMB_W;
+  c.height = Math.round(snapshotCanvas.height * scale);
+  c.getContext("2d").drawImage(snapshotCanvas, 0, 0, c.width, c.height);
+  img.src = c.toDataURL();
+  img.className = "print-image";
+  img.alt = `capture ${index}`;
 
-  const label = document.createElement("div");
-  label.className = "print-label";
-  label.textContent = `#${String(index).padStart(2, "0")}`;
+  const meta = document.createElement("div");
+  meta.className = "print-meta";
+  meta.innerHTML = `
+    <div class="print-meta-row">
+      <span class="print-meta-label">CAPTURE</span>
+      <span class="print-meta-value print-meta-value--accent">#${String(index).padStart(2, "0")}</span>
+    </div>
+    <div class="print-meta-row">
+      <span class="print-meta-label">TIME</span>
+      <span class="print-meta-value">${ts || "--:--"}</span>
+    </div>
+    <div class="print-meta-row">
+      <span class="print-meta-label">STATUS</span>
+      <span class="print-meta-value print-meta-value--accent">SAVED</span>
+    </div>
+  `;
 
-  print.appendChild(thumbCanvas);
-  print.appendChild(label);
+  print.appendChild(img);
+  print.appendChild(meta);
   galleryStrip.insertBefore(print, galleryStrip.firstChild);
 }
 
@@ -480,6 +501,7 @@ function shuffle(arr) {
 
 function finishCountdownAndCapture(box) {
   countdown.active = false;
+  triggerFlash();
 
   const mirroredFrame = document.createElement("canvas");
   mirroredFrame.width = canvas.width;
@@ -1075,6 +1097,49 @@ function handleFistReset() {
 
 let handLandmarker = null;
 let fistHoldCounter = 0;
+let recTimerInterval = null;
+let recSeconds = 0;
+
+function startRecTimer() {
+  recSeconds = 0;
+  if (recTimerInterval) clearInterval(recTimerInterval);
+  recTimerInterval = setInterval(() => {
+    recSeconds++;
+    const m = String(Math.floor(recSeconds / 60)).padStart(2, "0");
+    const s = String(recSeconds % 60).padStart(2, "0");
+    recTimer.textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function stopRecTimer() {
+  if (recTimerInterval) {
+    clearInterval(recTimerInterval);
+    recTimerInterval = null;
+  }
+}
+
+function triggerFlash() {
+  flashOverlay.classList.add("flash-overlay--active");
+  setTimeout(() => flashOverlay.classList.remove("flash-overlay--active"), 80);
+}
+
+function advanceLoaderStep(step) {
+  const steps = loaderSteps.querySelectorAll(".loader-step");
+  steps.forEach((el) => {
+    const num = parseInt(el.dataset.step, 10);
+    el.classList.remove("loader-step--active", "loader-step--done");
+    if (num < step) {
+      el.classList.add("loader-step--done");
+      el.querySelector(".step-icon").textContent = "\u2713";
+    } else if (num === step) {
+      el.classList.add("loader-step--active");
+      el.querySelector(".step-icon").textContent = "\u25B8";
+    }
+  });
+  const total = steps.length;
+  const pct = Math.min(100, step > total ? 100 : Math.round(((step - 1) / total) * 100));
+  loaderBarFill.style.width = `${pct}%`;
+}
 
 function processResults(result) {
   if (appState === "shattering") {
@@ -1254,17 +1319,19 @@ function showError(message) {
 }
 
 function showLoaderError(message) {
+  loaderText.style.display = "block";
   loaderText.textContent = message;
-  loaderText.style.color = "#e0533d";
+  loaderText.style.color = "";
   loaderRetry.classList.remove("hidden");
 }
 
 function resetLoaderUI() {
   loadingOverlay.classList.remove("hidden");
-  loaderText.style.color = "";
-  loaderText.textContent = "loading HandLandmarker model…";
+  loaderText.style.display = "none";
+  loaderText.textContent = "";
   loaderRetry.classList.add("hidden");
   errorBanner.style.display = "none";
+  advanceLoaderStep(1);
 }
 
 async function boot() {
@@ -1282,14 +1349,20 @@ async function boot() {
 
   try {
     if (!videoEl.srcObject) {
+      advanceLoaderStep(2);
       await initWebcam();
     }
 
+    advanceLoaderStep(3);
     handLandmarker = await initHandLandmarker();
 
     settled = true;
     clearTimeout(watchdog);
-    loadingOverlay.classList.add("hidden");
+    advanceLoaderStep(4);
+    setTimeout(() => {
+      loadingOverlay.classList.add("hidden");
+      startRecTimer();
+    }, 400);
     statusText.textContent = "ready";
     requestAnimationFrame(renderLoop);
   } catch (err) {

@@ -4,10 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Puzzle Cam — Gesture Capture</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23f5c518'/><text x='16' y='23' text-anchor='middle' font-size='20' fill='%230a0a08'>🧩</text></svg>" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%230E0E0E' stroke='%23D9C9A3' stroke-width='1.5'/><text x='16' y='23' text-anchor='middle' font-size='18' fill='%23D9C9A3'>□</text></svg>" />
         <link rel="stylesheet" href="css/style.css" />
     </head>
     <body>
@@ -15,54 +12,103 @@
             <div id="stage">
                 <video id="webcam" playsinline autoplay muted></video>
                 <canvas id="sceneCanvas"></canvas>
-                <div class="macos-titlebar">
-                    <div class="traffic-lights">
-                        <span class="traffic-light close"></span>
-                        <span class="traffic-light minimize"></span>
-                        <span class="traffic-light zoom"></span>
+
+                <div class="film-grain"></div>
+                <div class="scanline-overlay"></div>
+                <div class="vignette"></div>
+
+                <div class="flash-overlay" id="flashOverlay"></div>
+
+                <div class="camera-hud" id="cameraHud">
+                    <div class="hud-corner hud-corner--tl">
+                        <div class="hud-rec">
+                            <span class="rec-dot"></span>
+                            <span class="hud-value hud-value--accent" id="recLabel">REC</span>
+                        </div>
+                        <span class="hud-value hud-value--xl" id="recTimer">00:00</span>
+                        <div class="status-line">
+                            <span id="statusDot" class="status-dot"></span>
+                            <span id="statusText">starting camera…</span>
+                        </div>
                     </div>
-                    <span class="titlebar-text">puzzle cam</span>
+
+                    <div class="hud-corner hud-corner--tr">
+                        <span class="hud-label">ISO</span>
+                        <span class="hud-value">400</span>
+                        <span class="hud-label" style="margin-top:4px;">FPS</span>
+                        <span class="hud-value">24</span>
+                    </div>
+
+                    <div class="hud-corner hud-corner--bl">
+                        <span class="hud-label">SD CARD</span>
+                        <span class="hud-value" id="sdCardStatus">OK</span>
+                        <span class="hud-label" style="margin-top:4px;">MODE</span>
+                        <span class="hud-value">MANUAL</span>
+                    </div>
+
+                    <div class="hud-corner hud-corner--br">
+                        <span class="hud-label">BATTERY</span>
+                        <div class="battery-indicator">
+                            <div class="battery-level">
+                                <span class="battery-bar"></span>
+                                <span class="battery-bar"></span>
+                                <span class="battery-bar"></span>
+                                <span class="battery-bar battery-bar--empty"></span>
+                            </div>
+                        </div>
+                        <span class="hud-label" style="margin-top:4px;">FOCUS</span>
+                        <span class="hud-value">LOCK</span>
+                    </div>
                 </div>
-                <div class="hud-top">
-                    <div class="brand">
-                        PUZZLE·CAM <small>gesture capture</small>
-                    </div>
-                    <div class="status-pill">
-                        <span id="statusDot" class="status-dot"></span>
-                        <span id="statusText">starting camera…</span>
-                    </div>
+
+                <div class="gesture-hud" id="gestureHud">
+                    <span class="gesture-item">
+                        <span class="gesture-dot gesture-dot--pinch"></span>
+                        FRAME
+                    </span>
+                    <span class="gesture-item">
+                        <span class="gesture-dot gesture-dot--drag"></span>
+                        MOVE
+                    </span>
+                    <span class="gesture-item">
+                        <span class="gesture-dot gesture-dot--fist"></span>
+                        SAVE
+                    </span>
                 </div>
-                <div class="hud-bottom">
-                    <div class="gesture-key">
-                        <span class="item"><span class="swatch pinch"></span> pinch to frame</span>
-                        <span class="item"><span class="swatch drag"></span> pinch &amp; drag</span>
-                        <span class="item"><span class="swatch fist"></span> fist to save</span>
-                    </div>
-                </div>
+
                 <div id="progressBadge" class="progress-badge">
-                    <span id="progressText">0 / 9 pieces placed</span>
+                    <span id="progressText">0 / 9 pieces</span>
                 </div>
+
                 <div id="loadingOverlay">
-                    <div class="loader-icon">&#x1f9e9;</div>
-                    <div class="loader-text" id="loaderText">
-                        loading model...
-                    </div>
+                    <div class="loader-title">INITIALIZING CAMERA</div>
                     <div class="loader-bar-track">
-                        <div class="loader-bar-fill"></div>
+                        <div class="loader-bar-fill" id="loaderBarFill" style="width:0%"></div>
                     </div>
-                    <button
-                        type="button"
-                        id="loaderRetry"
-                        class="loader-retry hidden"
-                    >
-                        retry
-                    </button>
+                    <div class="loader-text" id="loaderText" style="display:none;"></div>
+                    <div class="loader-steps" id="loaderSteps">
+                        <div class="loader-step" data-step="1">
+                            <span class="step-icon">○</span>
+                            Checking Lens
+                        </div>
+                        <div class="loader-step" data-step="2">
+                            <span class="step-icon">○</span>
+                            Loading Memory
+                        </div>
+                        <div class="loader-step" data-step="3">
+                            <span class="step-icon">○</span>
+                            Calibrating Gesture Engine
+                        </div>
+                    </div>
+                    <button type="button" id="loaderRetry" class="loader-retry hidden">retry</button>
                 </div>
+
                 <div id="errorBanner"></div>
             </div>
+
             <aside id="gallery">
                 <div class="gallery-head">
-                    <span class="gallery-title">Strip</span>
+                    <span class="gallery-title">Film Strip</span>
                     <span class="gallery-count" id="galleryCount">0 / 3</span>
                 </div>
                 <div class="strip-complete-msg" id="stripCompleteMsg">
@@ -70,25 +116,12 @@
                 </div>
                 <div id="galleryStrip" class="gallery-strip">
                     <div class="gallery-empty" id="galleryEmpty">
-                        Your puzzles<br />will appear here.
+                        waiting for capture...
                     </div>
                 </div>
                 <div class="gallery-actions">
-                    <button
-                        type="button"
-                        id="downloadStripBtn"
-                        class="gallery-action-btn"
-                        disabled
-                    >
-                        download strip
-                    </button>
-                    <button
-                        type="button"
-                        id="resetAllBtn"
-                        class="gallery-action-btn gallery-action-btn--danger"
-                    >
-                        reset all
-                    </button>
+                    <button type="button" id="downloadStripBtn" class="gallery-action-btn" disabled>download strip</button>
+                    <button type="button" id="resetAllBtn" class="gallery-action-btn gallery-action-btn--danger">reset all</button>
                 </div>
             </aside>
         </div>
