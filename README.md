@@ -1,4 +1,4 @@
-# Puzzle Cam
+# Frame Puzzle
 
 A hand-gesture-controlled puzzle game using your webcam and MediaPipe.
 

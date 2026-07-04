@@ -172,7 +172,7 @@ function downloadPhotoStrip() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `puzzlecam_strip_${Date.now()}.png`;
+    link.download = `framepuzzle_strip_${Date.now()}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -338,7 +338,7 @@ async function initHandLandmarker() {
     return handLandmarker;
   } catch (gpuErr) {
     console.warn(
-      "[PuzzleCam] GPU delegate failed, retrying with CPU…",
+      "[FramePuzzle] GPU delegate failed, retrying with CPU…",
       gpuErr,
     );
   }

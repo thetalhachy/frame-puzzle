@@ -1,5 +1,5 @@
 {
-  "name": "puzzle-cam",
+  "name": "frame-puzzle",
   "version": "1.0.0",
   "description": "Hand gesture-controlled puzzle game using webcam and MediaPipe",
   "private": true,
