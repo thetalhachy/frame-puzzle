@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Puzzle Cam — Gesture Capture</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23f5c518'/><text x='16' y='23' text-anchor='middle' font-size='20' fill='%230a0a08'>🧩</text></svg>" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="css/style.css" />
+    </head>
+    <body>
+        <div id="app">
+            <div id="stage">
+                <video id="webcam" playsinline autoplay muted></video>
+                <canvas id="sceneCanvas"></canvas>
+                <div class="hud-top">
+                    <div class="brand">
+                        PUZZLE·CAM <small>gesture capture</small>
+                    </div>
+                    <div class="status-pill">
+                        <span id="statusDot" class="status-dot"></span>
+                        <span id="statusText">starting camera…</span>
+                    </div>
+                </div>
+                <div class="hud-bottom">
+                    <div class="gesture-key">
+                        <span class="item"><span class="swatch pinch"></span> pinch to frame</span>
+                        <span class="item"><span class="swatch drag"></span> pinch &amp; drag to move</span>
+                        <span class="item"><span class="swatch fist"></span> fist to save / reset</span>
+                    </div>
+                </div>
+                <div id="progressBadge" class="progress-badge">
+                    <span id="progressText">0 / 9 pieces placed</span>
+                </div>
+                <div id="loadingOverlay">
+                    <div class="loader-text" id="loaderText">
+                        loading model...
+                    </div>
+                    <div class="loader-bar"></div>
+                    <button
+                        type="button"
+                        id="loaderRetry"
+                        class="loader-retry hidden"
+                    >
+                        retry
+                    </button>
+                </div>
+                <div id="errorBanner"></div>
+            </div>
+            <aside id="gallery">
+                <div class="gallery-head">
+                    <span class="gallery-title">Strip</span>
+                    <span class="gallery-count" id="galleryCount">0 / 3</span>
+                </div>
+                <div class="strip-complete-msg" id="stripCompleteMsg">
+                    strip complete — download or reset
+                </div>
+                <div id="galleryStrip" class="gallery-strip">
+                    <div class="gallery-empty" id="galleryEmpty">
+                        Your puzzles<br />will appear here.
+                    </div>
+                </div>
+                <div class="gallery-actions">
+                    <button
+                        type="button"
+                        id="downloadStripBtn"
+                        class="gallery-action-btn"
+                        disabled
+                    >
+                        download strip
+                    </button>
+                    <button
+                        type="button"
+                        id="resetAllBtn"
+                        class="gallery-action-btn gallery-action-btn--danger"
+                    >
+                        reset all
+                    </button>
+                </div>
+            </aside>
+        </div>
+        <script type="module" src="./app.js"></script>
+    </body>
+</html>
