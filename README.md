@@ -2,7 +2,7 @@
 
 A hand-gesture-controlled puzzle game using your webcam and MediaPipe.
 
-Frame a scene with both hands (pinch), solve the 3×3 puzzle by dragging pieces with pinch gestures, then fist to save. Captures build up in a film strip gallery — download the strip when it's full.
+Frame a scene with both hands (pinch), solve the 3×3 puzzle by dragging pieces with pinch gestures, then fist to save. Captures build up in a film strip gallery! download the strip when it's full.
 
 ## How it works
 
