@@ -25,3 +25,5 @@ Open the URL shown in your terminal. Chrome or Edge recommended (requires WebGL 
 - [MediaPipe HandLandmarker](https://developers.google.com/mediapipe/solutions/vision/hand_landmarker) — hand tracking
 - Vanilla JS (ES modules) — no framework
 - CSS custom properties — theming
+
+made by talha
